@@ -1,0 +1,79 @@
+/* 基本のフォント設定 */
+body {
+    font-family: 'Noto Sans JP', sans-serif;
+}
+
+/* テキストグロー効果 */
+.glow-text {
+    text-shadow: 0 0 10px rgba(236, 72, 153, 0.5), 0 0 20px rgba(236, 72, 153, 0.3);
+}
+
+/* Tailwind CSSでカバーされない、または特定のカスタマイズが必要なスタイル */
+
+/* フィルターボタンのアクティブ状態のスタイル */
+.filter-btn.active {
+    background-color: #ec4899; /* pink-500 */
+    color: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* 完了済みアイテムのスタイル */
+.item.completed .item-text {
+    text-decoration: line-through;
+    color: #9ca3af; /* gray-400 */
+}
+
+.item.completed {
+    background-color: #f9fafb; /* gray-50 */
+}
+
+/* ユーザー名入力欄の表示・非表示 */
+#nameEditSection.hidden {
+    display: none;
+}
+
+/* Font Awesome アイコンのサイズ調整など、必要に応じて追加 */
+.fa-check-circle {
+    color: #10b981; /* green-500 */
+}
+
+.fa-trash-alt {
+    color: #ef4444; /* red-500 */
+}
+
+/* ホバー時のトランジションを滑らかに */
+button, input[type="checkbox"] {
+    transition: all 0.15s ease-in-out;
+}
+
+/* チェックボックスのカスタムスタイル (Tailwindでは難しい場合) */
+input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    height: 1.25rem; /* 20px */
+    width: 1.25rem; /* 20px */
+    border: 2px solid #d1d5db; /* gray-300 */
+    border-radius: 0.25rem; /* 4px */
+    cursor: pointer;
+    display: inline-block;
+    position: relative;
+    vertical-align: middle;
+}
+
+input[type="checkbox"]:checked {
+    background-color: #ec4899; /* pink-500 */
+    border-color: #ec4899; /* pink-500 */
+}
+
+input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    left: 0.375rem; /* 6px */
+    top: 0.125rem;  /* 2px */
+    width: 0.375rem; /* 6px */
+    height: 0.75rem; /* 12px */
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
