@@ -1,13 +1,15 @@
 // DOM Elements
 const itemInput = document.getElementById('itemInput');
-const addBtn = document.getElementById('addBtn');
+const addBtn = document.getElementById('addItemBtn');
 const shoppingList = document.getElementById('shoppingList');
 const filterBtns = document.querySelectorAll('.filter-btn');
-const clearCompletedBtn = document.getElementById('clearCompleted');
-const itemCountSpan = document.getElementById('itemCount'); // Renamed for clarity
-const userNameSpan = document.getElementById('userName');
-const nameInput = document.getElementById('nameInput');
-const saveNameBtn = document.getElementById('saveName');
+const clearCompletedBtn = document.getElementById('clearCompletedBtn');
+const totalItemsSpan = document.getElementById('totalItems');
+const completedItemsSpan = document.getElementById('completedItems');
+const activeItemsSpan = document.getElementById('activeItems');
+const userNameSpan = document.getElementById('displayedUserName');
+const nameInput = document.getElementById('userNameInput');
+const saveNameBtn = document.getElementById('saveUserName');
 const nameEditSection = document.getElementById('nameEditSection');
 
 // App State
@@ -178,8 +180,13 @@ filterBtns.forEach(btn => {
 
 // Utility Functions
 function updateItemCount() {
-    const activeItemsCount = items.filter(item => !item.completed).length;
-    itemCountSpan.textContent = `${activeItemsCount} 個のアイテムが残っています`;
+    const total = items.length;
+    const completed = items.filter(item => item.completed).length;
+    const active = total - completed;
+
+    if (totalItemsSpan) totalItemsSpan.textContent = total;
+    if (completedItemsSpan) completedItemsSpan.textContent = completed;
+    if (activeItemsSpan) activeItemsSpan.textContent = active;
 }
 
 function saveItems() {
