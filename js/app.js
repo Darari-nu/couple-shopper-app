@@ -12,20 +12,65 @@ const nameInput = document.getElementById('userNameInput');
 const saveNameBtn = document.getElementById('saveUserName');
 const nameEditSection = document.getElementById('nameEditSection');
 
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+const itemsRef = database.ref('shoppingItems');
+
 // App State
-let items = JSON.parse(localStorage.getItem('shoppingItems_v2')) || [];
+let items = []; // Items will now be loaded from Firebase
 let currentFilter = 'all'; // Default filter
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
     loadUserName();
-    renderItems();
-    updateItemCount();
+    // renderItems(); // Will be called by Firebase listeners
+    // updateItemCount(); // Will be called by Firebase listeners
+
     // Ensure the 'all' filter button is active by default if no other is
     const activeFilterButton = document.querySelector('.filter-btn.active');
     if (!activeFilterButton) {
         document.querySelector('.filter-btn[data-filter="all"]').classList.add('active');
     }
+
+    // Listen for Firebase data changes
+    itemsRef.on('child_added', snapshot => {
+        const newItem = snapshot.val();
+        newItem.id = snapshot.key; // Use Firebase key as ID
+        const existingItemIndex = items.findIndex(item => item.id === newItem.id);
+        if (existingItemIndex === -1) { // Avoid duplicates on initial load or re-connect
+            items.push(newItem);
+        }
+        renderItems();
+        updateItemCount();
+    });
+
+    itemsRef.on('child_changed', snapshot => {
+        const changedItem = snapshot.val();
+        changedItem.id = snapshot.key;
+        items = items.map(item => item.id === changedItem.id ? changedItem : item);
+        renderItems();
+        updateItemCount();
+    });
+
+    itemsRef.on('child_removed', snapshot => {
+        const removedItemId = snapshot.key;
+        items = items.filter(item => item.id !== removedItemId);
+        renderItems();
+        updateItemCount();
+    });
+
+    // Initial load (in case there's already data and child_added doesn't fire for all initially for some reason)
+    // itemsRef.once('value', snapshot => {
+    //     items = []; // Clear local items before initial load from Firebase
+    //     snapshot.forEach(childSnapshot => {
+    //         const item = childSnapshot.val();
+    //         item.id = childSnapshot.key;
+    //         items.push(item);
+    //     });
+    //     renderItems();
+    //     updateItemCount();
+    // });
 });
 
 // User Name Functions
@@ -73,18 +118,21 @@ function addItem() {
         return;
     }
 
+    const userName = localStorage.getItem('shoppingListUserName_v2') || '匿名';
+
     const newItem = {
-        id: Date.now(),
+        // id: Date.now(), // Firebase will generate a unique key (ID)
         text,
         completed: false,
-        addedBy: localStorage.getItem('shoppingListUserName_v2') || '匿名',
+        addedBy: userName,
         timestamp: new Date().toISOString()
     };
 
-    items.push(newItem);
-    saveItems();
-    renderItems();
-    updateItemCount();
+    itemsRef.push(newItem); // Add to Firebase
+    // items.push(newItem); // No longer needed, Firebase listener will update local 'items' array
+    // saveItems(); // No longer needed
+    // renderItems(); // No longer needed, Firebase listener will trigger re-render
+    // updateItemCount(); // No longer needed, Firebase listener will trigger update
     itemInput.value = '';
     itemInput.focus();
 }
@@ -139,32 +187,39 @@ function renderItems() {
 
 // Item Manipulation Functions
 function toggleComplete(id) {
-    items = items.map(item => item.id === id ? { ...item, completed: !item.completed } : item);
-    saveItems();
-    renderItems();
-    updateItemCount();
+    const item = items.find(item => item.id === id);
+    if (item) {
+        itemsRef.child(id).update({ completed: !item.completed });
+    }
+    // saveItems(); // No longer needed
+    // renderItems(); // No longer needed, Firebase listener will trigger re-render
+    // updateItemCount(); // No longer needed, Firebase listener will trigger update
 }
 
 function deleteItem(id) {
     if (confirm('このアイテムを削除してもよろしいですか？')) {
-        items = items.filter(item => item.id !== id);
-        saveItems();
-        renderItems();
-        updateItemCount();
+        itemsRef.child(id).remove();
+        // items = items.filter(item => item.id !== id); // No longer needed
+        // saveItems(); // No longer needed
+        // renderItems(); // No longer needed, Firebase listener will trigger re-render
+        // updateItemCount(); // No longer needed, Firebase listener will trigger update
     }
 }
 
 clearCompletedBtn.addEventListener('click', () => {
-    const completedItemsExist = items.some(item => item.completed);
-    if (!completedItemsExist) {
+    const completedItems = items.filter(item => item.completed);
+    if (completedItems.length === 0) {
         alert('削除する完了済みアイテムがありません。');
         return;
     }
     if (confirm('完了したアイテムをすべて削除してもよろしいですか？')) {
-        items = items.filter(item => !item.completed);
-        saveItems();
-        renderItems();
-        updateItemCount();
+        completedItems.forEach(item => {
+            itemsRef.child(item.id).remove();
+        });
+        // items = items.filter(item => !item.completed); // No longer needed
+        // saveItems(); // No longer needed
+        // renderItems(); // No longer needed, Firebase listener will trigger re-render
+        // updateItemCount(); // No longer needed, Firebase listener will trigger update
     }
 });
 
@@ -189,9 +244,9 @@ function updateItemCount() {
     if (activeItemsSpan) activeItemsSpan.textContent = active;
 }
 
-function saveItems() {
-    localStorage.setItem('shoppingItems_v2', JSON.stringify(items));
-}
+// function saveItems() {
+//     localStorage.setItem('shoppingItems_v2', JSON.stringify(items));
+// } // No longer needed with Firebase
 
 // Debug: Reset data
 // function resetAllData() {

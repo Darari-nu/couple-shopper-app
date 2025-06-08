@@ -4,3 +4,6 @@
 # IDE/Editor specific
 .vscode/
 .idea/
+
+# Firebase config file (contains API keys)
+js/firebase-config.js
