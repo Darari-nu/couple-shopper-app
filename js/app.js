@@ -98,38 +98,34 @@ function renderItems() {
     shoppingList.innerHTML = ''; // Clear existing items
 
     if (filteredItems.length === 0) {
-        const emptyStateMessage = currentFilter === 'completed' 
+        const message = currentFilter === 'completed' 
             ? '完了したアイテムはありません。'
             : currentFilter === 'active'
             ? '買うべきアイテムはすべて購入済みです！'
             : 'リストは空です。アイテムを追加しましょう！';
-        shoppingList.innerHTML = `<li class="text-center text-gray-500 py-4">${emptyStateMessage}</li>`;
+        shoppingList.innerHTML = `<li class="empty-message body-text text-center" style="color: var(--color-mono-3); padding: 20px 0;">${message}</li>`;
         return;
     }
 
     filteredItems.forEach(item => {
         const li = document.createElement('li');
-        li.className = `item flex items-center justify-between p-3 bg-white rounded-lg shadow hover:shadow-md transition duration-150 ease-in-out ${item.completed ? 'completed' : ''}`;
+        li.className = `item ${item.completed ? 'completed' : ''}`;
         li.dataset.id = item.id;
 
         const itemDate = new Date(item.timestamp);
         const formattedDate = `${('0' + (itemDate.getMonth() + 1)).slice(-2)}/${('0' + itemDate.getDate()).slice(-2)} ${('0' + itemDate.getHours()).slice(-2)}:${('0' + itemDate.getMinutes()).slice(-2)}`;
 
         li.innerHTML = `
-            <div class="flex items-center flex-grow min-w-0">
-                <input type="checkbox" class="checkbox flex-shrink-0 mr-3 sm:mr-4 focus:ring-pink-500" ${item.completed ? 'checked' : ''}>
-                <div class="flex-grow min-w-0">
-                    <span class="item-text text-gray-800 text-sm sm:text-base truncate block" title="${item.text}">${item.text}</span>
-                    <span class="item-metadata text-xs text-gray-400 block">
-                        ${formattedDate} by ${item.addedBy}
-                    </span>
+            <div class="item-content">
+                <input type="checkbox" class="checkbox" ${item.completed ? 'checked' : ''}>
+                <div class="item-details">
+                    <span class="item-text" title="${item.text}">${item.text}</span>
+                    <span class="item-metadata">${formattedDate} by ${item.addedBy}</span>
                 </div>
             </div>
-            <div class="flex items-center flex-shrink-0 ml-2">
-                <button class="delete-btn text-red-500 hover:text-red-700 transition duration-150 ease-in-out p-1" aria-label="削除">
-                    <i class="fas fa-trash-alt fa-fw"></i>
-                </button>
-            </div>
+            <button class="delete-btn" aria-label="削除">
+                <i class="fas fa-trash-alt fa-fw"></i>
+            </button>
         `;
 
         li.querySelector('.checkbox').addEventListener('change', () => toggleComplete(item.id));

@@ -3,57 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>シェア買い物リスト</title>
+    <title>Couple Shopper</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="bg-gray-100">
-    <div class="container mx-auto mt-4 sm:mt-8 p-4 sm:p-6 max-w-xl bg-white rounded-xl shadow-2xl">
-        <!-- Header -->
-        <header class="text-center mb-6 sm:mb-8">
-            <h1 class="text-3xl sm:text-4xl font-bold text-pink-600 glow-text">シェア買い物リスト</h1>
-            <div class="mt-4 text-gray-700">
-                <span id="userName" class="font-semibold text-lg block mb-2">ユーザー名を入力</span>
-                <div id="nameEditSection" class="mt-1 flex gap-2 justify-center items-center">
-                    <input type="text" id="nameInput" placeholder="名前 (例: 太郎)" maxlength="10" class="w-40 sm:w-auto p-2 border border-gray-300 rounded-md focus:border-pink-500 focus:ring-1 focus:ring-pink-500 text-sm sm:text-base">
-                    <button id="saveName" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-3 sm:px-4 rounded-md transition duration-150 ease-in-out text-sm sm:text-base">
-                        <i class="fas fa-save mr-1"></i>保存
+<body>
+
+    <div class="container-minimal">
+
+        <header class="mb-40">
+            <h1 class="app-title">
+                Couple Shopper
+            </h1>
+        </header>
+
+        <!-- User Name Section -->
+        <section id="userNameSection" class="mb-40">
+            <div id="userNameDisplay" class="hidden">
+                <p class="body-text">
+                    こんにちは、<span id="displayedUserName" class="font-semibold" style="color: var(--color-accent);"></span> さん
+                    <button id="editUserNameBtn" class="btn-link ml-20">
+                        <i class="fas fa-edit mr-1"></i>変更
+                    </button>
+                </p>
+            </div>
+            <div id="userNameInputArea">
+                <label for="userName" class="section-heading">お名前を入力</label>
+                <div class="flex items-end space-x-2 mt-20">
+                    <input type="text" id="userName" name="userName" placeholder="例: 太郎">
+                    <button id="saveUserNameBtn" class="btn btn-primary flex-shrink-0">
+                        保存
                     </button>
                 </div>
             </div>
-        </header>
+        </section>
 
         <!-- Add Item Section -->
-        <div class="add-item-section mb-6 flex flex-col sm:flex-row gap-2">
-            <input type="text" id="itemInput" class="flex-grow p-3 border-2 border-gray-300 rounded-lg focus:border-pink-500 focus:ring-1 focus:ring-pink-500" placeholder="買うものを入力...">
-            <button id="addBtn" class="bg-pink-500 hover:bg-pink-600 text-white font-semibold p-3 rounded-lg shadow-md hover:shadow-lg transition duration-150 ease-in-out flex items-center justify-center">
-                <i class="fas fa-plus mr-2"></i>追加
+        <section class="mb-40">
+            <h2 class="section-heading">アイテムを追加</h2>
+            <div class="flex items-end space-x-2 mt-20">
+                <input type="text" id="itemInput" placeholder="例: 牛乳、パン、卵など">
+                <button id="addItemBtn" class="btn btn-primary flex-shrink-0">
+                    追加
+                </button>
+            </div>
+        </section>
+
+        <!-- Filter and Clear Section -->
+        <section class="mb-20 flex items-center justify-between">
+            <div class="filters">
+                <button data-filter="all" class="filter-btn active">すべて</button>
+                <button data-filter="active" class="filter-btn">未完了</button>
+                <button data-filter="completed" class="filter-btn">完了済み</button>
+            </div>
+            <button id="clearCompletedBtn" class="btn btn-secondary">
+                完了済みを削除
             </button>
-        </div>
+        </section>
 
-        <!-- Filter Section -->
-        <div class="filter-section mb-6 flex flex-wrap justify-center gap-2">
-            <button class="filter-btn active bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-4 rounded-full font-medium text-sm sm:text-base transition duration-150" data-filter="all">すべて</button>
-            <button class="filter-btn bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-4 rounded-full font-medium text-sm sm:text-base transition duration-150" data-filter="active">買うもの</button>
-            <button class="filter-btn bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-4 rounded-full font-medium text-sm sm:text-base transition duration-150" data-filter="completed">買ったもの</button>
-        </div>
-
-        <!-- Shopping List -->
-        <ul id="shoppingList" class="space-y-3 mb-6">
-            <!-- List items will be dynamically inserted here -->
-        </ul>
+        <!-- Shopping List Section -->
+        <section class="mb-40">
+            <!-- Items will be dynamically added here by js/app.js -->
+            <ul id="shoppingList" class="shopping-list">
+                <li class="empty-message body-text text-center" style="color: var(--color-mono-3); padding: 20px 0;">リストは空です。アイテムを追加してください！</li>
+            </ul>
+        </section>
 
         <!-- Stats Section -->
-        <div class="stats-section mt-6 pt-4 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center text-gray-600 gap-2">
-            <span id="itemCount" class="font-medium">0 アイテム</span>
-            <button id="clearCompleted" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition duration-150 ease-in-out flex items-center justify-center text-sm sm:text-base">
-                <i class="fas fa-eraser mr-2"></i>買ったものを削除
-            </button>
-        </div>
+        <section id="statsSection" class="mt-40 pt-20" style="border-top: 1px solid var(--color-mono-4);">
+            <p class="body-text">合計アイテム数: <span id="totalItems" class="font-semibold number-text" style="color: var(--color-mono-1);">0</span></p>
+            <p class="body-text">完了済みアイテム数: <span id="completedItems" class="font-semibold number-text" style="color: var(--color-mono-1);">0</span></p>
+            <p class="body-text">未完了アイテム数: <span id="activeItems" class="font-semibold number-text" style="color: var(--color-mono-1);">0</span></p>
+        </section>
+
+        <footer class="mt-40 text-center" style="font-size: 12px; color: var(--color-mono-3);">
+            <p>&copy; <span id="currentYear"></span> Couple Shopper. All rights reserved.</p>
+        </footer>
+
     </div>
-    
+
     <script src="js/app.js"></script>
 </body>
 </html>
