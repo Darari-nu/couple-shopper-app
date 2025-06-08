@@ -12,10 +12,23 @@ const nameInput = document.getElementById('userNameInput');
 const saveNameBtn = document.getElementById('saveUserName');
 const nameEditSection = document.getElementById('nameEditSection');
 
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
-const itemsRef = database.ref('shoppingItems');
+// Initialize Firebase if configuration is provided
+let itemsRef;
+let useFirebase = false;
+try {
+    if (typeof firebaseConfig === 'undefined') {
+        throw new Error('firebaseConfig is not defined.');
+    }
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    itemsRef = database.ref('shoppingItems');
+    useFirebase = true;
+} catch (e) {
+    console.error('Firebase initialization failed:', e);
+    alert('Firebase 設定が見つからないため、ローカル保存モードで起動します。データはこのブラウザにのみ保存されます。');
+    // Fallback to a no-op reference to keep existing code paths working
+    itemsRef = { push: () => {}, child: () => ({ update: () => {}, remove: () => {} }) };
+}
 
 // App State
 let items = []; // Items will now be loaded from Firebase
@@ -24,53 +37,45 @@ let currentFilter = 'all'; // Default filter
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
     loadUserName();
-    // renderItems(); // Will be called by Firebase listeners
-    // updateItemCount(); // Will be called by Firebase listeners
 
-    // Ensure the 'all' filter button is active by default if no other is
     const activeFilterButton = document.querySelector('.filter-btn.active');
     if (!activeFilterButton) {
         document.querySelector('.filter-btn[data-filter="all"]').classList.add('active');
     }
 
-    // Listen for Firebase data changes
-    itemsRef.on('child_added', snapshot => {
-        const newItem = snapshot.val();
-        newItem.id = snapshot.key; // Use Firebase key as ID
-        const existingItemIndex = items.findIndex(item => item.id === newItem.id);
-        if (existingItemIndex === -1) { // Avoid duplicates on initial load or re-connect
-            items.push(newItem);
-        }
+    if (useFirebase) {
+        // Listen for Firebase data changes
+        itemsRef.on('child_added', snapshot => {
+            const newItem = snapshot.val();
+            newItem.id = snapshot.key; // Use Firebase key as ID
+            const existingItemIndex = items.findIndex(item => item.id === newItem.id);
+            if (existingItemIndex === -1) {
+                items.push(newItem);
+            }
+            renderItems();
+            updateItemCount();
+        });
+
+        itemsRef.on('child_changed', snapshot => {
+            const changedItem = snapshot.val();
+            changedItem.id = snapshot.key;
+            items = items.map(item => item.id === changedItem.id ? changedItem : item);
+            renderItems();
+            updateItemCount();
+        });
+
+        itemsRef.on('child_removed', snapshot => {
+            const removedItemId = snapshot.key;
+            items = items.filter(item => item.id !== removedItemId);
+            renderItems();
+            updateItemCount();
+        });
+    } else {
+        // Local storage mode
+        loadItems();
         renderItems();
         updateItemCount();
-    });
-
-    itemsRef.on('child_changed', snapshot => {
-        const changedItem = snapshot.val();
-        changedItem.id = snapshot.key;
-        items = items.map(item => item.id === changedItem.id ? changedItem : item);
-        renderItems();
-        updateItemCount();
-    });
-
-    itemsRef.on('child_removed', snapshot => {
-        const removedItemId = snapshot.key;
-        items = items.filter(item => item.id !== removedItemId);
-        renderItems();
-        updateItemCount();
-    });
-
-    // Initial load (in case there's already data and child_added doesn't fire for all initially for some reason)
-    // itemsRef.once('value', snapshot => {
-    //     items = []; // Clear local items before initial load from Firebase
-    //     snapshot.forEach(childSnapshot => {
-    //         const item = childSnapshot.val();
-    //         item.id = childSnapshot.key;
-    //         items.push(item);
-    //     });
-    //     renderItems();
-    //     updateItemCount();
-    // });
+    }
 });
 
 // User Name Functions
@@ -121,18 +126,21 @@ function addItem() {
     const userName = localStorage.getItem('shoppingListUserName_v2') || '匿名';
 
     const newItem = {
-        // id: Date.now(), // Firebase will generate a unique key (ID)
         text,
         completed: false,
         addedBy: userName,
         timestamp: new Date().toISOString()
     };
 
-    itemsRef.push(newItem); // Add to Firebase
-    // items.push(newItem); // No longer needed, Firebase listener will update local 'items' array
-    // saveItems(); // No longer needed
-    // renderItems(); // No longer needed, Firebase listener will trigger re-render
-    // updateItemCount(); // No longer needed, Firebase listener will trigger update
+    if (useFirebase) {
+        itemsRef.push(newItem); // Add to Firebase
+    } else {
+        newItem.id = Date.now();
+        items.push(newItem);
+        saveItems();
+        renderItems();
+        updateItemCount();
+    }
     itemInput.value = '';
     itemInput.focus();
 }
@@ -189,20 +197,27 @@ function renderItems() {
 function toggleComplete(id) {
     const item = items.find(item => item.id === id);
     if (item) {
-        itemsRef.child(id).update({ completed: !item.completed });
+        if (useFirebase) {
+            itemsRef.child(id).update({ completed: !item.completed });
+        } else {
+            item.completed = !item.completed;
+            saveItems();
+            renderItems();
+            updateItemCount();
+        }
     }
-    // saveItems(); // No longer needed
-    // renderItems(); // No longer needed, Firebase listener will trigger re-render
-    // updateItemCount(); // No longer needed, Firebase listener will trigger update
 }
 
 function deleteItem(id) {
     if (confirm('このアイテムを削除してもよろしいですか？')) {
-        itemsRef.child(id).remove();
-        // items = items.filter(item => item.id !== id); // No longer needed
-        // saveItems(); // No longer needed
-        // renderItems(); // No longer needed, Firebase listener will trigger re-render
-        // updateItemCount(); // No longer needed, Firebase listener will trigger update
+        if (useFirebase) {
+            itemsRef.child(id).remove();
+        } else {
+            items = items.filter(item => item.id !== id);
+            saveItems();
+            renderItems();
+            updateItemCount();
+        }
     }
 }
 
@@ -213,13 +228,16 @@ clearCompletedBtn.addEventListener('click', () => {
         return;
     }
     if (confirm('完了したアイテムをすべて削除してもよろしいですか？')) {
-        completedItems.forEach(item => {
-            itemsRef.child(item.id).remove();
-        });
-        // items = items.filter(item => !item.completed); // No longer needed
-        // saveItems(); // No longer needed
-        // renderItems(); // No longer needed, Firebase listener will trigger re-render
-        // updateItemCount(); // No longer needed, Firebase listener will trigger update
+        if (useFirebase) {
+            completedItems.forEach(item => {
+                itemsRef.child(item.id).remove();
+            });
+        } else {
+            items = items.filter(item => !item.completed);
+            saveItems();
+            renderItems();
+            updateItemCount();
+        }
     }
 });
 
@@ -244,9 +262,21 @@ function updateItemCount() {
     if (activeItemsSpan) activeItemsSpan.textContent = active;
 }
 
-// function saveItems() {
-//     localStorage.setItem('shoppingItems_v2', JSON.stringify(items));
-// } // No longer needed with Firebase
+function saveItems() {
+    localStorage.setItem('shoppingItems_v2', JSON.stringify(items));
+}
+
+function loadItems() {
+    const data = localStorage.getItem('shoppingItems_v2');
+    if (data) {
+        try {
+            items = JSON.parse(data);
+        } catch (e) {
+            console.error('Failed to parse saved items:', e);
+            items = [];
+        }
+    }
+}
 
 // Debug: Reset data
 // function resetAllData() {
