@@ -29,38 +29,38 @@
                     </button>
                 </p>
             </div>
-            <div id="userNameInputArea">
-                <label for="userName" class="section-heading">お名前を入力</label>
-                <div class="flex items-end space-x-2 mt-20">
-                    <input type="text" id="userName" name="userName" placeholder="例: 太郎">
-                    <button id="saveUserNameBtn" class="btn btn-primary flex-shrink-0">
-                        保存
-                    </button>
+            <div id="nameEditSection" class="mb-20">
+                <label for="userNameInput" class="section-heading block">お名前を入力</label>
+                <div class="input-group">
+                    <input type="text" id="userNameInput" placeholder="例: 太郎">
+                    <button id="saveUserName" class="btn btn-secondary">保存</button>
                 </div>
             </div>
         </section>
 
         <!-- Add Item Section -->
         <section class="mb-40">
-            <h2 class="section-heading">アイテムを追加</h2>
-            <div class="flex items-end space-x-2 mt-20">
-                <input type="text" id="itemInput" placeholder="例: 牛乳、パン、卵など">
-                <button id="addItemBtn" class="btn btn-primary flex-shrink-0">
-                    追加
-                </button>
+            <div class="mb-40">
+                <label for="itemInput" class="section-heading block">アイテムを追加</label>
+                <div class="input-group">
+                    <input type="text" id="itemInput" placeholder="例: 牛乳、パン、卵など">
+                    <button id="addItemBtn" class="btn btn-primary">追加</button>
+                </div>
             </div>
         </section>
 
         <!-- Filter and Clear Section -->
-        <section class="mb-20 flex items-center justify-between">
-            <div class="filters">
-                <button data-filter="all" class="filter-btn active">すべて</button>
-                <button data-filter="active" class="filter-btn">未完了</button>
-                <button data-filter="completed" class="filter-btn">完了済み</button>
+        <section class="mb-20">
+            <div class="filter-bar">
+                <div class="filters">
+                    <button data-filter="all" class="filter-btn active">すべて</button>
+                    <button data-filter="active" class="filter-btn">未完了</button>
+                    <button data-filter="completed" class="filter-btn">完了済み</button>
+                </div>
+                <button id="clearCompletedBtn" class="btn btn-link">
+                    完了済みを削除
+                </button>
             </div>
-            <button id="clearCompletedBtn" class="btn btn-secondary">
-                完了済みを削除
-            </button>
         </section>
 
         <!-- Shopping List Section -->
